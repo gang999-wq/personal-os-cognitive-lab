@@ -161,7 +161,7 @@ button.danger { background: #fff; color: #b42318; border: 1px solid #f2b8b5; mar
         <input id="import-json-file" type="file" accept="application/json,.json" class="hidden" />
       </div>
 
-      <p class="footnote">数据默认只保存在当前浏览器的 localStorage。更换设备/清除浏览器数据会导致本地记录丢失。反应时受设备和浏览器影响，只适合同设备、相近条件下看粗趋势。<br><span id="app-version">v0.6.1</span></p>
+      <p class="footnote">数据默认只保存在当前浏览器的 localStorage。更换设备/清除浏览器数据会导致本地记录丢失。反应时受设备和浏览器影响，只适合同设备、相近条件下看粗趋势。<br><span id="app-version">v0.6.2</span></p>
     </section>
 
     <section id="history" class="panel hidden">
@@ -203,7 +203,7 @@ button.danger { background: #fff; color: #b42318; border: 1px solid #f2b8b5; mar
 (() => {
   'use strict';
 
-  const APP_VERSION = '0.6.1';
+  const APP_VERSION = '0.6.2';
   const STORAGE_KEY = 'personalOS.cognitiveLab.sessions.v1';
   const TASK_LABELS = {
     reading: 'Reading Recall',
@@ -389,7 +389,7 @@ button.danger { background: #fff; color: #b42318; border: 1px solid #f2b8b5; mar
     const mode = modeFromSelect();
     const sid = sessionId();
     const started = Date.now();
-    activeSessionContext = { interruptions: 0 };
+    activeSessionContext = { interruptions: 0, task };
     const jsPsych = initJsPsych({
       display_element: 'jspsych-target',
       minimum_valid_rt: 150,
@@ -824,7 +824,6 @@ button.danger { background: #fff; color: #b42318; border: 1px solid #f2b8b5; mar
       lines.push(`- 真实功能训练：${s.reading.source || '文章'}${s.reading.title ? `｜${s.reading.title}` : ''}`);
       lines.push(`- 时长：${s.duration_min} 分钟`);
       lines.push(`- 脑疲劳：训练前 ${s.fatigue_before ?? '—'}/10 → 训练后 ${s.fatigue_after ?? '—'}/10`);
-      if (s.interruptions) lines.push(`- 数据提示：本次切后台 / 锁屏 ${s.interruptions} 次，RT 不用于趋势比较`);
       lines.push(`- 一句发现：${s.finding || '未填写'}`);
       lines.push(`- 脱稿摘要：${s.reading.summary}`);
       lines.push(`- 观点判断：${s.reading.view}`);
@@ -1050,7 +1049,12 @@ button.danger { background: #fff; color: #b42318; border: 1px solid #f2b8b5; mar
   });
 
   document.addEventListener('visibilitychange', () => {
-    if (activeJsPsych && activeSessionContext && document.hidden) {
+    if (
+      activeJsPsych &&
+      activeSessionContext &&
+      activeSessionContext.task !== 'reading' &&
+      document.hidden
+    ) {
       activeSessionContext.interruptions += 1;
     }
   });
