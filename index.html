@@ -1,0 +1,1074 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f7f7f7" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Cognitive Lab" />
+  <title>Personal OS Cognitive Lab</title>
+  <link rel="stylesheet" href="https://unpkg.com/jspsych@8.3.0/css/jspsych.css" />
+  <style>
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #1f2328;
+  background: #f5f6f8;
+  font-synthesis: none;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: #f5f6f8; }
+button, select, textarea, input { font: inherit; }
+button { cursor: pointer; }
+.shell { width: min(760px, 100%); margin: 0 auto; padding: max(18px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); }
+.panel { background: #fff; border: 1px solid #e5e7eb; border-radius: 18px; padding: 22px; box-shadow: 0 8px 24px rgba(0,0,0,.05); }
+.hidden { display: none !important; }
+.eyebrow { font-size: 13px; letter-spacing: .06em; color: #6b7280; margin-bottom: 8px; }
+h1 { margin: 0 0 8px; font-size: clamp(30px, 8vw, 48px); }
+h2 { margin-top: 0; }
+.lead { line-height: 1.6; margin-top: 0; }
+.muted, .footnote { color: #6b7280; line-height: 1.55; }
+.footnote { font-size: 13px; margin-top: 18px; }
+.status-box, .safety { border-radius: 14px; padding: 14px; margin: 16px 0; }
+.status-box { background: #f7f7f8; }
+.safety { border: 1px solid #e5e7eb; line-height: 1.55; }
+label { display: block; font-weight: 650; margin: 8px 0; }
+select, textarea, input[type="text"] { width: 100%; border: 1px solid #d1d5db; border-radius: 12px; padding: 12px; background: #fff; color: #111827; }
+.task-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-top: 18px; }
+.task-card { text-align: left; border: 1px solid #dfe3e8; background: #fff; border-radius: 16px; padding: 16px; min-height: 126px; display: flex; flex-direction: column; gap: 8px; color: inherit; }
+.task-card:active { transform: scale(.99); }
+.task-card strong { font-size: 18px; }
+.task-card span { line-height: 1.35; }
+.task-card small { color: #6b7280; margin-top: auto; }
+.task-card:disabled { opacity: .4; cursor: not-allowed; }
+.actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+button { border: 0; border-radius: 12px; padding: 11px 15px; background: #111827; color: #fff; }
+button.secondary { background: #eef0f3; color: #1f2937; }
+button.danger { background: #fff; color: #b42318; border: 1px solid #f2b8b5; margin-top: 18px; }
+.topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.history-item { border-top: 1px solid #eceff2; padding: 14px 0; }
+.history-item:first-child { border-top: 0; }
+.history-meta { color: #6b7280; font-size: 13px; }
+.metric-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin: 14px 0; }
+.metric { background: #f7f7f8; border-radius: 12px; padding: 12px; }
+.metric strong { display: block; font-size: 22px; margin-top: 3px; }
+.summary { white-space: pre-wrap; background: #f7f7f8; border-radius: 12px; padding: 14px; overflow-x: auto; line-height: 1.55; }
+
+#runner { padding: 10px; min-height: 72vh; }
+.runner-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 4px 10px; border-bottom: 1px solid #eceff2; margin-bottom: 8px; }
+.runner-bar button { min-height: 44px; flex: 0 0 auto; }
+#jspsych-target { min-height: 66vh; display: flex; align-items: center; justify-content: center; }
+.jspsych-content { max-width: 680px !important; width: 100%; }
+.jspsych-btn { border-radius: 12px !important; padding: 12px 16px !important; margin: 6px !important; background: #111827 !important; color: #fff !important; font-size: 17px !important; }
+.jspsych-survey-text-question textarea, .jspsych-survey-text-question input { width: 100% !important; max-width: 100% !important; border-radius: 10px; border: 1px solid #d1d5db; padding: 10px; }
+.stroop-word { font-size: clamp(48px, 16vw, 86px); font-weight: 800; margin: 24px 0; }
+.search-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; width: min(330px, 90vw); margin: 18px auto 22px; }
+.search-cell { display: grid; place-items: center; aspect-ratio: 1; font-size: 28px; font-weight: 750; border-radius: 10px; background: #f4f5f7; }
+.digit { font-size: clamp(54px, 18vw, 92px); font-weight: 800; }
+.nback-letter { font-size: clamp(54px, 18vw, 92px); font-weight: 800; }
+
+@media (max-width: 620px) {
+  .shell { padding-left: 10px; padding-right: 10px; }
+  .panel { border-radius: 14px; padding: 16px; }
+  .task-grid { grid-template-columns: 1fr; }
+  .metric-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.task-section { margin-top: 24px; }
+.section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.section-heading h2 { font-size: 18px; margin: 0; }
+.section-heading span { color: #6b7280; font-size: 13px; }
+.task-grid.single { grid-template-columns: 1fr; }
+.warning { border: 1px solid #e6b85c; background: #fffaf0; border-radius: 14px; padding: 14px; line-height: 1.55; margin: 16px 0; }
+
+  </style>
+  <script src="https://unpkg.com/jspsych@8.3.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.2.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-text@2.1.1"></script>
+</head>
+<body>
+  <main id="app" class="shell">
+    <section id="home" class="panel">
+      <div class="eyebrow">Personal OS · 认知功能恢复支持</div>
+      <h1>Cognitive Lab</h1>
+      <p class="lead">它只是 Personal OS 里的一个训练工具。一次只做一个短任务，训练成绩只用于个人趋势观察，不代表医学意义上的“认知恢复”。</p>
+
+      <div class="status-box">
+        <label for="day-mode">今天状态</label>
+        <select id="day-mode">
+          <option value="standard">标准</option>
+          <option value="reduced">降载</option>
+          <option value="zero">0 分钟 / 今天不训练</option>
+        </select>
+        <p id="mode-hint" class="muted">标准：真实文章训练 + 至多 1 个短专项；Personal OS 已覆盖同类能力时可去重。</p>
+      </div>
+
+      <div class="safety">若出现明显头痛、脑雾、疲劳、注意力显著下降，或训练后不适加重：今天直接停，0 分钟合法，不补债。</div>
+      <div id="dependency-warning" class="warning hidden" role="alert"></div>
+
+      <section class="task-section" aria-labelledby="real-task-title">
+        <div class="section-heading">
+          <h2 id="real-task-title">真实功能训练</h2>
+          <span>优先</span>
+        </div>
+        <div class="task-grid single">
+          <button class="task-card" data-task="reading">
+            <strong>Reading Recall</strong>
+            <span>读完文章后脱稿摘要 · 观点 · 反问</span>
+            <small>优先训练 G 表达/组织 + C 记忆提取，并轻度覆盖 E</small>
+          </button>
+        </div>
+      </section>
+
+      <section class="task-section" aria-labelledby="lab-task-title">
+        <div class="section-heading">
+          <h2 id="lab-task-title">jsPsych 专项</h2>
+          <span>一天至多 1 个</span>
+        </div>
+        <div class="task-grid" id="task-grid">
+          <button class="task-card" data-task="stroop">
+            <strong>Stroop</strong>
+            <span>抑制控制 · 处理速度</span>
+            <small>约 3–5 分钟</small>
+          </button>
+          <button class="task-card" data-task="visual">
+            <strong>Visual Search</strong>
+            <span>视觉搜索 · 注意分配</span>
+            <small>约 3–5 分钟</small>
+          </button>
+          <button class="task-card" data-task="digit">
+            <strong>Digit Span</strong>
+            <span>短时保持 · 工作记忆</span>
+            <small>约 4–6 分钟</small>
+          </button>
+          <button class="task-card" data-task="nback">
+            <strong>Low-dose N-back</strong>
+            <span>1-back · 工作记忆更新</span>
+            <small>约 4–6 分钟</small>
+          </button>
+        </div>
+      </section>
+
+      <div class="actions-row">
+        <button id="history-btn" class="secondary">查看本地记录</button>
+        <button id="export-json-btn" class="secondary">导出 JSON</button>
+        <button id="export-csv-btn" class="secondary">导出摘要 CSV</button>
+        <button id="import-json-btn" class="secondary">导入 / 恢复 JSON</button>
+        <input id="import-json-file" type="file" accept="application/json,.json" class="hidden" />
+      </div>
+
+      <p class="footnote">数据默认只保存在当前浏览器的 localStorage。更换设备/清除浏览器数据会导致本地记录丢失。反应时受设备和浏览器影响，只适合同设备、相近条件下看粗趋势。<br><span id="app-version">v0.6.0</span></p>
+    </section>
+
+    <section id="history" class="panel hidden">
+      <div class="topline">
+        <h2>本地训练记录</h2>
+        <button id="history-back" class="secondary">返回</button>
+      </div>
+      <div id="history-list"></div>
+      <button id="clear-data-btn" class="danger">清空本机训练记录</button>
+    </section>
+
+    <section id="runner" class="panel hidden">
+      <div class="runner-bar">
+        <span class="muted">训练中 · 可随时停止，不补债</span>
+        <button id="abort-btn" class="secondary" type="button">停止本次训练</button>
+      </div>
+      <div id="jspsych-target"></div>
+    </section>
+
+    <section id="result" class="panel hidden">
+      <div class="eyebrow">本次训练完成</div>
+      <h2 id="result-title">结果</h2>
+      <div id="result-body"></div>
+      <label for="finding">一句发现（可选）</label>
+      <textarea id="finding" rows="3" placeholder="例如：后半段反应变慢，但错误没有明显增加。"></textarea>
+      <div class="actions-row">
+        <button id="save-result-btn">保存并生成 Personal OS 摘要</button>
+        <button id="skip-save-btn" class="secondary">不保存，返回首页</button>
+      </div>
+      <pre id="os-summary" class="summary hidden"></pre>
+      <div id="summary-actions" class="actions-row hidden">
+        <button id="copy-summary-btn" class="secondary">复制摘要</button>
+        <button id="home-btn">返回首页</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+(() => {
+  'use strict';
+
+  const APP_VERSION = '0.6.0';
+  const STORAGE_KEY = 'personalOS.cognitiveLab.sessions.v1';
+  const TASK_LABELS = {
+    reading: 'Reading Recall',
+    stroop: 'Stroop',
+    visual: 'Visual Search',
+    digit: 'Digit Span',
+    nback: 'Low-dose N-back'
+  };
+  const TASK_VERSIONS = { reading: '1.1', stroop: '1.2', visual: '1.2', digit: '1.2', nback: '1.2' };
+  const TASK_ABILITIES = {
+    reading: ['G 表达/组织', 'C 记忆提取', 'E 轻度推理'],
+    stroop: ['D 处理速度', '抑制控制'],
+    visual: ['D 处理速度', '视觉注意'],
+    digit: ['B 工作记忆', 'C 短时提取'],
+    nback: ['B 工作记忆更新']
+  };
+
+  const home = document.getElementById('home');
+  const runner = document.getElementById('runner');
+  const result = document.getElementById('result');
+  const history = document.getElementById('history');
+  const modeSelect = document.getElementById('day-mode');
+  const modeHint = document.getElementById('mode-hint');
+  const dependencyWarning = document.getElementById('dependency-warning');
+
+  let pendingSession = null;
+  let activeJsPsych = null;
+  let abortRequested = false;
+  let activeSessionContext = null;
+
+  function sessionId() {
+    return `cog-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+  }
+
+  function getSessions() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function setSessions(sessions) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function median(nums) {
+    const xs = nums.filter(Number.isFinite).slice().sort((a, b) => a - b);
+    if (!xs.length) return null;
+    const m = Math.floor(xs.length / 2);
+    return xs.length % 2 ? xs[m] : Math.round((xs[m - 1] + xs[m]) / 2);
+  }
+
+  function mean(nums) {
+    const xs = nums.filter(Number.isFinite);
+    return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+  }
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function balancedBooleans(n) {
+    const yes = Math.floor(n / 2);
+    return shuffle(Array.from({ length: n }, (_, i) => i < yes));
+  }
+
+  function clampFatigue(v) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return null;
+    return Math.max(0, Math.min(10, n));
+  }
+
+  function escapeHtml(v) {
+    return String(v ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  function getDeviceContext() {
+    return {
+      device_class: window.matchMedia('(max-width: 767px)').matches ? 'mobile' : 'desktop',
+      viewport: `${window.innerWidth}x${window.innerHeight}`,
+      language: navigator.language || '',
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+      platform: navigator.userAgentData?.platform || navigator.platform || ''
+    };
+  }
+
+  function show(section) {
+    [home, runner, result, history].forEach((el) => el.classList.add('hidden'));
+    section.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+
+  function modeFromSelect() {
+    return modeSelect.value;
+  }
+
+  function updateModeUI() {
+    const mode = modeFromSelect();
+    const cards = document.querySelectorAll('.task-card');
+    if (mode === 'zero') {
+      modeHint.textContent = '今天不训练。优先恢复，不补债。';
+      cards.forEach((b) => (b.disabled = true));
+    } else if (mode === 'reduced') {
+      modeHint.textContent = '降载：只做一个 5–10 分钟以内的最低负担动作。';
+      cards.forEach((b) => (b.disabled = false));
+    } else {
+      modeHint.textContent = '标准：真实文章训练 + 至多 1 个短专项；Personal OS 已覆盖同类能力时可去重。';
+      cards.forEach((b) => (b.disabled = false));
+    }
+  }
+
+  const fatigueLabels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+
+  function dependenciesReady() {
+    return (
+      typeof initJsPsych === 'function' &&
+      typeof jsPsychHtmlButtonResponse !== 'undefined' &&
+      typeof jsPsychHtmlKeyboardResponse !== 'undefined' &&
+      typeof jsPsychSurveyText !== 'undefined'
+    );
+  }
+
+  function showDependencyWarning() {
+    dependencyWarning.innerHTML =
+      '<strong>jsPsych 没有加载成功。</strong><br>首次使用请保持联网后刷新页面；成功加载一次后，本应用会尽量缓存固定版本资源供后续使用。';
+    dependencyWarning.classList.remove('hidden');
+    dependencyWarning.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function fatigueTrial(label, key) {
+    return {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `<h2>${label}</h2><p>当前脑疲劳程度：0 = 完全不疲劳，10 = 非常疲劳。</p>`,
+      choices: fatigueLabels,
+      data: { kind: 'fatigue', fatigue_key: key },
+      on_finish(data) {
+        data.fatigue_value = clampFatigue(data.response);
+      }
+    };
+  }
+
+  function introTrial(title, text) {
+    return {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `<h2>${title}</h2><div style="line-height:1.65;text-align:left;max-width:580px;margin:0 auto">${text}</div>`,
+      choices: ['开始']
+    };
+  }
+
+  function runTask(task) {
+    if (modeFromSelect() === 'zero' || !TASK_LABELS[task]) return;
+    if (!dependenciesReady()) {
+      showDependencyWarning();
+      return;
+    }
+    dependencyWarning.classList.add('hidden');
+
+    abortRequested = false;
+    pendingSession = null;
+    show(runner);
+
+    const mode = modeFromSelect();
+    const sid = sessionId();
+    const started = Date.now();
+    activeSessionContext = { interruptions: 0 };
+    const jsPsych = initJsPsych({
+      display_element: 'jspsych-target',
+      minimum_valid_rt: 150,
+      default_iti: 100,
+      on_finish: () => {
+        const rows = jsPsych.data.get().values();
+        finishTask(task, mode, sid, started, rows);
+      }
+    });
+    activeJsPsych = jsPsych;
+
+    let timeline = [fatigueTrial('开始前', 'fatigue_before')];
+    if (task === 'reading') timeline = timeline.concat(buildReadingTimeline());
+    if (task === 'stroop') timeline = timeline.concat(buildStroopTimeline(mode));
+    if (task === 'visual') timeline = timeline.concat(buildVisualTimeline(mode));
+    if (task === 'digit') timeline = timeline.concat(buildDigitTimeline(mode));
+    if (task === 'nback') timeline = timeline.concat(buildNBackTimeline(mode));
+    timeline.push(fatigueTrial('结束前', 'fatigue_after'));
+
+    jsPsych.run(timeline);
+  }
+
+  function buildReadingTimeline() {
+    return [
+      {
+        type: jsPsychSurveyText,
+        preamble: '<h2>Reading Recall</h2><p>先在红板报 / 简讯等来源完成一篇阅读。不要把全文粘贴进这里。</p>',
+        questions: [
+          { prompt: '来源（可选）', name: 'source' },
+          { prompt: '标题（可选）', name: 'title' }
+        ],
+        button_label: '我已经读完'
+      },
+      {
+        type: jsPsychSurveyText,
+        preamble: '<h2>离开原文，开始脱稿</h2><p>先不要回看原文。</p>',
+        questions: [
+          { prompt: '用 1–3 句写出核心内容', name: 'summary', rows: 4, required: true },
+          { prompt: '一句自己的观点 / 判断', name: 'view', rows: 2, required: true },
+          { prompt: '一个反问、替代解释或推理点', name: 'question', rows: 2, required: true }
+        ],
+        button_label: '完成'
+      }
+    ];
+  }
+
+  function buildStroopTimeline(mode) {
+    const colors = [
+      { name: '红', css: '#c2413b' },
+      { name: '蓝', css: '#2f6db5' },
+      { name: '绿', css: '#2f7d4a' },
+      { name: '黄', css: '#9a7b16' }
+    ];
+    const makeTrial = (congruent, practice = false) => {
+      const ink = pick(colors);
+      const word = congruent ? ink : pick(colors.filter((c) => c.name !== ink.name));
+      const choices = colors.map((c) => c.name);
+      return {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `<div class="stroop-word" style="color:${ink.css}">${word.name}</div><p>${practice ? '<strong>练习：</strong>' : ''}选择<strong>字体颜色</strong>，不要读字义。</p>`,
+        choices,
+        data: {
+          kind: 'stroop',
+          practice,
+          congruent,
+          ink: ink.name,
+          word: word.name,
+          correct_choice: choices.indexOf(ink.name)
+        },
+        on_finish(data) {
+          data.correct = data.response === data.correct_choice;
+        }
+      };
+    };
+
+    const practice = shuffle([true, false, true, false]).map((c) => makeTrial(c, true));
+    const n = mode === 'reduced' ? 12 : 28;
+    const trials = balancedBooleans(n).map((c) => makeTrial(c, false));
+    return [
+      introTrial('Stroop', '先做 4 个练习试次，练习不计入正式指标。忽略汉字含义，只回答字体颜色；准确优先于盲目加速。'),
+      ...practice,
+      introTrial('Stroop｜正式开始', '下面开始计入本次结果。继续优先保证正确。'),
+      ...trials
+    ];
+  }
+
+  function makeSearchGrid(targetPresent) {
+    const cells = Array.from({ length: 25 }, () => ({ char: 'L', rot: pick([0, 90, 180, 270]) }));
+    if (targetPresent) {
+      const idx = Math.floor(Math.random() * cells.length);
+      cells[idx] = { char: 'T', rot: pick([0, 90, 180, 270]) };
+    }
+    return `<div class="search-grid">${cells
+      .map((c) => `<div class="search-cell" style="transform:rotate(${c.rot}deg)">${c.char}</div>`)
+      .join('')}</div>`;
+  }
+
+  function buildVisualTimeline(mode) {
+    const makeTrial = (present, practice = false) => ({
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `${makeSearchGrid(present)}<p>${practice ? '<strong>练习：</strong>' : ''}有没有字母 T？</p>`,
+      choices: ['有 T', '没有 T'],
+      data: { kind: 'visual', practice, target_present: present, correct_choice: present ? 0 : 1 },
+      on_finish(data) {
+        data.correct = data.response === data.correct_choice;
+      }
+    });
+
+    const practice = shuffle([true, false, true, false]).map((p) => makeTrial(p, true));
+    const n = mode === 'reduced' ? 10 : 24;
+    const trials = balancedBooleans(n).map((p) => makeTrial(p, false));
+    return [
+      introTrial('Visual Search', '先做 4 个练习试次，练习不计入正式指标。快速扫描网格，判断是否存在字母 T；准确优先于盲目加速。'),
+      ...practice,
+      introTrial('Visual Search｜正式开始', '下面开始计入本次结果。'),
+      ...trials
+    ];
+  }
+
+  function randomDigits(len) {
+    let s = '';
+    for (let i = 0; i < len; i++) {
+      let d = String(Math.floor(Math.random() * 10));
+      if (i > 0 && d === s[i - 1]) d = String((Number(d) + 3) % 10);
+      s += d;
+    }
+    return s;
+  }
+
+  function buildDigitTimeline(mode) {
+    const levels = mode === 'reduced' ? [4, 5, 6] : [4, 5, 6, 7, 8];
+    const timeline = [
+      introTrial(
+        'Digit Span',
+        '数字会逐个出现。最后按原顺序输入整串数字。每个长度最多 2 次；同一长度两次都错则结束。它只是本工具的训练估计，不是临床测验。'
+      )
+    ];
+    let keepGoing = true;
+
+    for (const len of levels) {
+      const levelTrials = [];
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        const seq = randomDigits(len);
+        levelTrials.push({
+          type: jsPsychHtmlKeyboardResponse,
+          stimulus: '<div style="font-size:26px">准备</div>',
+          choices: 'NO_KEYS',
+          trial_duration: 650,
+          data: { kind: 'digit_ready', span: len, attempt }
+        });
+
+        for (const d of seq) {
+          levelTrials.push({
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: `<div class="digit">${d}</div>`,
+            choices: 'NO_KEYS',
+            trial_duration: 650,
+            post_trial_gap: 160,
+            data: { kind: 'digit_stim', span: len, attempt }
+          });
+        }
+
+        levelTrials.push({
+          type: jsPsychSurveyText,
+          questions: [{ prompt: `请输入刚才的 ${len} 位数字`, name: 'recall', required: true }],
+          button_label: '提交',
+          data: { kind: 'digit_recall', span: len, attempt, target: seq },
+          on_load() {
+            const input = document.querySelector('#jspsych-content input[type="text"]');
+            if (input) {
+              input.setAttribute('inputmode', 'numeric');
+              input.setAttribute('pattern', '[0-9]*');
+              input.setAttribute('autocomplete', 'off');
+            }
+          },
+          on_finish(data) {
+            const response = (data.response?.recall || '').replace(/\D+/g, '');
+            data.correct = response === data.target;
+            data.recalled = response;
+          }
+        });
+      }
+
+      timeline.push({
+        timeline: levelTrials,
+        conditional_function: () => keepGoing,
+        on_timeline_finish: () => {
+          const rows = activeJsPsych?.data
+            .get()
+            .filter({ kind: 'digit_recall', span: len })
+            .values() || [];
+          if (rows.length >= 2 && rows.slice(-2).every((r) => !r.correct)) keepGoing = false;
+        }
+      });
+    }
+
+    return timeline;
+  }
+
+  function buildNBackTimeline(mode) {
+    const letters = ['A', 'F', 'H', 'K', 'M', 'R'];
+    const makeSequence = (n) => {
+      const desiredMatches = Math.max(1, Math.round((n - 1) * 0.32));
+      const matchPositions = new Set(shuffle(Array.from({ length: n - 1 }, (_, i) => i + 1)).slice(0, desiredMatches));
+      const seq = [pick(letters)];
+      for (let i = 1; i < n; i++) {
+        if (matchPositions.has(i)) seq.push(seq[i - 1]);
+        else seq.push(pick(letters.filter((x) => x !== seq[i - 1])));
+      }
+      return seq;
+    };
+    const makeTrials = (seq, practice) => seq.map((letter, i) => {
+      const match = i > 0 && letter === seq[i - 1];
+      return {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `<div class="nback-letter">${letter}</div>${
+          i === 0
+            ? `<p>${practice ? '<strong>练习：</strong>' : ''}第一题没有上一个字母，请选“不匹配”。</p>`
+            : `<p>${practice ? '<strong>练习：</strong>' : ''}是否与上一个字母相同？</p>`
+        }`,
+        choices: ['匹配', '不匹配'],
+        data: { kind: 'nback', practice, n: 1, position: i, match, correct_choice: match ? 0 : 1 },
+        on_finish(data) {
+          data.correct = data.response === data.correct_choice;
+        }
+      };
+    });
+
+    const n = mode === 'reduced' ? 18 : 36;
+    const practiceSeq = ['A', 'A', 'F', 'K', 'K', 'M'];
+    const seq = makeSequence(n);
+    return [
+      introTrial('Low-dose N-back', '这是低剂量 1-back。先做 6 个练习试次，练习不计入正式指标。判断当前字母是否与<strong>上一个</strong>字母相同。'),
+      ...makeTrials(practiceSeq, true),
+      introTrial('Low-dose N-back｜正式开始', '下面开始计入本次结果。第一题仍只用于进入节奏。'),
+      ...makeTrials(seq, false)
+    ];
+  }
+
+  function readFatigue(rows, key) {
+    const row = rows.find((r) => r.kind === 'fatigue' && r.fatigue_key === key);
+    return row ? clampFatigue(row.fatigue_value) : null;
+  }
+
+  function finishTask(task, mode, sid, started, rows) {
+    const sessionContext = activeSessionContext || { interruptions: 0 };
+    activeJsPsych = null;
+    activeSessionContext = null;
+
+    if (abortRequested) {
+      abortRequested = false;
+      pendingSession = null;
+      show(home);
+      modeHint.textContent = '本次训练已停止，不保存、不补债。';
+      setTimeout(updateModeUI, 2200);
+      return;
+    }
+
+    const ended = Date.now();
+    const summary = summarizeTask(task, rows);
+    pendingSession = {
+      session_id: sid,
+      timestamp: new Date(started).toISOString(),
+      finished_at: new Date(ended).toISOString(),
+      schema_version: 2,
+      app_version: APP_VERSION,
+      task_version: TASK_VERSIONS[task] || '1.0',
+      task_type: task,
+      task_label: TASK_LABELS[task],
+      abilities: TASK_ABILITIES[task],
+      mode,
+      duration_min: Math.max(1, Math.round((ended - started) / 60000)),
+      fatigue_before: readFatigue(rows, 'fatigue_before'),
+      fatigue_after: readFatigue(rows, 'fatigue_after'),
+      interruptions: sessionContext.interruptions || 0,
+      metrics: {
+        ...summary.metrics,
+        rt_valid: (sessionContext.interruptions || 0) === 0
+      },
+      reading: summary.reading || null,
+      finding: '',
+      device_context: getDeviceContext(),
+      raw_trials: rows
+    };
+
+    document.getElementById('result-title').textContent = TASK_LABELS[task];
+    document.getElementById('result-body').innerHTML = renderMetrics(summary.metrics, summary.reading);
+    document.getElementById('finding').value = '';
+    document.getElementById('os-summary').classList.add('hidden');
+    document.getElementById('summary-actions').classList.add('hidden');
+    document.getElementById('save-result-btn').classList.remove('hidden');
+    document.getElementById('skip-save-btn').classList.remove('hidden');
+    show(result);
+  }
+
+  function summarizeTask(task, rows) {
+    if (task === 'reading') {
+      const texts = rows.filter((r) => r.response && (r.response.summary !== undefined || r.response.source !== undefined));
+      const meta = texts.find((r) => r.response && (r.response.source !== undefined || r.response.title !== undefined));
+      const recall = texts.find((r) => r.response && r.response.summary !== undefined);
+      return {
+        metrics: { completed: true },
+        reading: {
+          source: meta?.response?.source || '',
+          title: meta?.response?.title || '',
+          summary: recall?.response?.summary || '',
+          view: recall?.response?.view || '',
+          question: recall?.response?.question || ''
+        }
+      };
+    }
+
+    if (task === 'stroop') {
+      const t = rows.filter((r) => r.kind === 'stroop' && !r.practice);
+      const correct = t.filter((r) => r.correct);
+      const cong = correct.filter((r) => r.congruent).map((r) => r.rt);
+      const incong = correct.filter((r) => !r.congruent).map((r) => r.rt);
+      const mc = median(cong);
+      const mi = median(incong);
+      return {
+        metrics: {
+          accuracy: t.length ? correct.length / t.length : null,
+          median_rt_ms: median(correct.map((r) => r.rt)),
+          stroop_cost_ms: mc !== null && mi !== null ? mi - mc : null,
+          trials: t.length
+        }
+      };
+    }
+
+    if (task === 'visual') {
+      const t = rows.filter((r) => r.kind === 'visual' && !r.practice);
+      const correct = t.filter((r) => r.correct);
+      return {
+        metrics: {
+          accuracy: t.length ? correct.length / t.length : null,
+          median_rt_ms: median(correct.map((r) => r.rt)),
+          trials: t.length
+        }
+      };
+    }
+
+    if (task === 'digit') {
+      const t = rows.filter((r) => r.kind === 'digit_recall');
+      const correct = t.filter((r) => r.correct);
+      const byLen = {};
+      t.forEach((r) => {
+        byLen[r.span] = byLen[r.span] || [];
+        byLen[r.span].push(Boolean(r.correct));
+      });
+      const passed = Object.keys(byLen)
+        .map(Number)
+        .filter((len) => byLen[len].some(Boolean));
+      const perfect = Object.keys(byLen)
+        .map(Number)
+        .filter((len) => byLen[len].length >= 2 && byLen[len].every(Boolean));
+      return {
+        metrics: {
+          accuracy: t.length ? correct.length / t.length : null,
+          max_span: passed.length ? Math.max(...passed) : 0,
+          perfect_span: perfect.length ? Math.max(...perfect) : 0,
+          trials: t.length
+        }
+      };
+    }
+
+    if (task === 'nback') {
+      const t = rows.filter((r) => r.kind === 'nback' && !r.practice);
+      const scored = t.slice(1);
+      const correct = scored.filter((r) => r.correct);
+      return {
+        metrics: {
+          accuracy: scored.length ? correct.length / scored.length : null,
+          median_rt_ms: median(correct.map((r) => r.rt)),
+          n: 1,
+          trials: scored.length
+        }
+      };
+    }
+
+    return { metrics: {} };
+  }
+
+  function fmtPct(v) {
+    return Number.isFinite(v) ? `${Math.round(v * 100)}%` : '—';
+  }
+
+  function renderMetrics(m, reading) {
+    if (reading) {
+      return '<div class="metric-grid"><div class="metric">状态<strong>完成</strong></div><div class="metric">核心输出<strong>3 项</strong></div></div><p class="muted">这项任务不做自动“质量评分”。周/月复盘重点看表达是否越来越清楚、是否能脱稿提取。</p>';
+    }
+
+    const items = [];
+    if ('accuracy' in m) items.push(['正确率', fmtPct(m.accuracy)]);
+    if (m.median_rt_ms != null) items.push(['正确反应中位数', `${m.median_rt_ms} ms`]);
+    if (m.stroop_cost_ms != null) items.push(['Stroop 差值', `${m.stroop_cost_ms} ms`]);
+    if ('max_span' in m) items.push(['最高通过 span', String(m.max_span)]);
+    if ('perfect_span' in m) items.push(['2/2 通过 span', String(m.perfect_span)]);
+    if ('n' in m) items.push(['N-back', `${m.n}-back`]);
+    items.push(['有效试次数', String(m.trials ?? '—')]);
+
+    const interruptNote = pendingSession?.interruptions
+      ? `<p class="warning">本次训练期间检测到 ${pendingSession.interruptions} 次切后台 / 锁屏。反应时数据保留，但不建议用于趋势比较。</p>`
+      : '';
+    const fatigueDelta =
+      Number.isFinite(pendingSession?.fatigue_before) && Number.isFinite(pendingSession?.fatigue_after)
+        ? pendingSession.fatigue_after - pendingSession.fatigue_before
+        : null;
+    const fatigueNote =
+      (Number.isFinite(pendingSession?.fatigue_after) && pendingSession.fatigue_after >= 8) ||
+      (Number.isFinite(fatigueDelta) && fatigueDelta >= 3)
+        ? '<p class="warning"><strong>今天建议到此为止。</strong> 本次脑疲劳较高或增加较明显，不再追加认知专项；后续以恢复为主。</p>'
+        : '';
+    return `<div class="metric-grid">${items
+      .map(([k, v]) => `<div class="metric">${k}<strong>${v}</strong></div>`)
+      .join('')}</div>${interruptNote}${fatigueNote}<p class="muted">只看趋势：速度提高但错误增加，不视为进步；不同设备/浏览器的 RT 不直接比较。</p>`;
+  }
+
+  function makeOSSummary(s) {
+    const modeMap = { standard: '标准', reduced: '降载', zero: '0 分钟' };
+    const m = s.metrics || {};
+    const metricBits = [];
+    if (Number.isFinite(m.accuracy)) metricBits.push(`正确率 ${Math.round(m.accuracy * 100)}%`);
+    if (Number.isFinite(m.median_rt_ms)) metricBits.push(`RT中位数 ${m.median_rt_ms}ms`);
+    if (Number.isFinite(m.stroop_cost_ms)) metricBits.push(`Stroop差值 ${m.stroop_cost_ms}ms`);
+    if (Number.isFinite(m.max_span)) metricBits.push(`最高通过span ${m.max_span}`);
+    if (Number.isFinite(m.perfect_span)) metricBits.push(`2/2通过span ${m.perfect_span}`);
+    if (Number.isFinite(m.n)) metricBits.push(`${m.n}-back`);
+
+    const lines = ['### 认知功能恢复支持', `- 今日状态：${modeMap[s.mode] || s.mode}`];
+
+    if (s.reading) {
+      lines.push(`- 真实功能训练：${s.reading.source || '文章'}${s.reading.title ? `｜${s.reading.title}` : ''}`);
+      lines.push(`- 时长：${s.duration_min} 分钟`);
+      lines.push(`- 脑疲劳：训练前 ${s.fatigue_before ?? '—'}/10 → 训练后 ${s.fatigue_after ?? '—'}/10`);
+      if (s.interruptions) lines.push(`- 数据提示：本次切后台 / 锁屏 ${s.interruptions} 次，RT 不用于趋势比较`);
+      lines.push(`- 一句发现：${s.finding || '未填写'}`);
+      lines.push(`- 脱稿摘要：${s.reading.summary}`);
+      lines.push(`- 观点判断：${s.reading.view}`);
+      lines.push(`- 反问 / 推理点：${s.reading.question}`);
+    } else {
+      lines.push(`- jsPsych 专项：${s.task_label}`);
+      lines.push(`- 覆盖能力：${(s.abilities || []).join(' / ') || '—'}`);
+      lines.push(`- 时长：${s.duration_min} 分钟`);
+      lines.push(`- 关键指标：${metricBits.length ? metricBits.join('；') : '无自动评分'}`);
+      lines.push(`- 脑疲劳：训练前 ${s.fatigue_before ?? '—'}/10 → 训练后 ${s.fatigue_after ?? '—'}/10`);
+      if (s.interruptions) lines.push(`- 数据提示：本次切后台 / 锁屏 ${s.interruptions} 次，RT 不用于趋势比较`);
+      lines.push(`- 一句发现：${s.finding || '未填写'}`);
+    }
+
+    return lines.join('\n');
+  }
+
+  function savePending() {
+    if (!pendingSession) return;
+    pendingSession.finding = document.getElementById('finding').value.trim();
+    const sessions = getSessions();
+    sessions.push(pendingSession);
+
+    if (!setSessions(sessions)) {
+      alert('本机保存失败。你仍可复制下面的 Personal OS 摘要，但这次原始记录没有写入 localStorage。');
+    }
+
+    const summary = makeOSSummary(pendingSession);
+    const pre = document.getElementById('os-summary');
+    pre.textContent = summary;
+    pre.classList.remove('hidden');
+    document.getElementById('summary-actions').classList.remove('hidden');
+    document.getElementById('save-result-btn').classList.add('hidden');
+    document.getElementById('skip-save-btn').classList.add('hidden');
+  }
+
+  function download(name, text, type = 'text/plain') {
+    const blob = new Blob([text], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function exportJSON() {
+    download(
+      `cognitive-lab-${new Date().toISOString().slice(0, 10)}.json`,
+      JSON.stringify(getSessions(), null, 2),
+      'application/json'
+    );
+  }
+
+  function validImportedSession(s) {
+    return Boolean(
+      s &&
+        typeof s === 'object' &&
+        typeof s.session_id === 'string' &&
+        typeof s.timestamp === 'string' &&
+        typeof s.task_type === 'string' &&
+        TASK_LABELS[s.task_type]
+    );
+  }
+
+  async function importJSONFile(file) {
+    if (!file) return;
+    let parsed;
+    try {
+      parsed = JSON.parse(await file.text());
+    } catch {
+      alert('无法读取这个 JSON 文件。文件可能已损坏或不是 Cognitive Lab 导出。');
+      return;
+    }
+
+    if (!Array.isArray(parsed) || parsed.some((s) => !validImportedSession(s))) {
+      alert('这个文件不是有效的 Cognitive Lab 会话导出。现有本机数据没有改变。');
+      return;
+    }
+
+    const current = getSessions();
+    const byId = new Map(current.map((s) => [s.session_id, s]));
+    let added = 0;
+    for (const session of parsed) {
+      if (!byId.has(session.session_id)) {
+        byId.set(session.session_id, session);
+        added += 1;
+      }
+    }
+    const merged = [...byId.values()].sort((a, b) => String(a.timestamp).localeCompare(String(b.timestamp)));
+    if (!setSessions(merged)) {
+      alert('导入校验通过，但浏览器本地存储空间不足，未写入数据。');
+      return;
+    }
+    alert(`导入完成：新增 ${added} 条，保留 ${current.length} 条现有记录；重复 session_id 已自动跳过。`);
+  }
+
+  function csvEscape(v) {
+    const s = String(v ?? '');
+    return `"${s.replaceAll('"', '""')}"`;
+  }
+
+  function exportCSV() {
+    const rows = [
+      [
+        'timestamp',
+        'task',
+        'mode',
+        'duration_min',
+        'fatigue_before',
+        'fatigue_after',
+        'interruptions',
+        'rt_valid',
+        'accuracy',
+        'median_rt_ms',
+        'stroop_cost_ms',
+        'max_span',
+        'n',
+        'finding'
+      ]
+    ];
+
+    for (const s of getSessions()) {
+      rows.push([
+        s.timestamp,
+        s.task_label,
+        s.mode,
+        s.duration_min,
+        s.fatigue_before,
+        s.fatigue_after,
+        s.interruptions ?? 0,
+        s.metrics?.rt_valid,
+        s.metrics?.accuracy,
+        s.metrics?.median_rt_ms,
+        s.metrics?.stroop_cost_ms,
+        s.metrics?.max_span,
+        s.metrics?.n,
+        s.finding
+      ]);
+    }
+
+    download(
+      `cognitive-lab-summary-${new Date().toISOString().slice(0, 10)}.csv`,
+      rows.map((r) => r.map(csvEscape).join(',')).join('\n'),
+      'text/csv;charset=utf-8'
+    );
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('history-list');
+    const sessions = getSessions().slice().reverse();
+    if (!sessions.length) {
+      list.innerHTML = '<p class="muted">还没有本地记录。</p>';
+      return;
+    }
+
+    list.innerHTML = sessions
+      .map((s) => {
+        const m = s.metrics || {};
+        const bits = [];
+        if (Number.isFinite(m.accuracy)) bits.push(`正确率 ${Math.round(m.accuracy * 100)}%`);
+        if (Number.isFinite(m.median_rt_ms)) bits.push(`RT ${m.median_rt_ms}ms`);
+        if (Number.isFinite(m.max_span)) bits.push(`span ${m.max_span}`);
+        if (Number.isFinite(m.perfect_span)) bits.push(`2/2 ${m.perfect_span}`);
+        if (Number.isFinite(m.n)) bits.push(`${m.n}-back`);
+        if (s.interruptions) bits.push(`中断 ${s.interruptions} 次`);
+        if (s.reading?.title) bits.push(`文章：${escapeHtml(s.reading.title)}`);
+
+        return `<div class="history-item"><strong>${escapeHtml(s.task_label)}</strong><div class="history-meta">${escapeHtml(
+          new Date(s.timestamp).toLocaleString()
+        )} · ${escapeHtml(s.duration_min)} 分钟 · 疲劳 ${escapeHtml(s.fatigue_before ?? '—')}→${escapeHtml(
+          s.fatigue_after ?? '—'
+        )}</div><div>${bits.join(' · ') || '无自动评分'}</div>${
+          s.finding ? `<div class="muted">${escapeHtml(s.finding)}</div>` : ''
+        }</div>`;
+      })      .join('');
+  }
+
+  modeSelect.addEventListener('change', updateModeUI);
+  document.querySelectorAll('.task-card').forEach((btn) => btn.addEventListener('click', () => runTask(btn.dataset.task)));
+  document.getElementById('save-result-btn').addEventListener('click', savePending);
+  document.getElementById('skip-save-btn').addEventListener('click', () => {
+    pendingSession = null;
+    show(home);
+  });
+  document.getElementById('home-btn').addEventListener('click', () => {
+    pendingSession = null;
+    show(home);
+  });
+  document.getElementById('copy-summary-btn').addEventListener('click', async () => {
+    const txt = document.getElementById('os-summary').textContent;
+    try {
+      await navigator.clipboard.writeText(txt);
+    } catch {
+      window.prompt('复制下面内容：', txt);
+    }
+  });
+  document.getElementById('history-btn').addEventListener('click', () => {
+    renderHistory();
+    show(history);
+  });
+  document.getElementById('history-back').addEventListener('click', () => show(home));
+  document.getElementById('export-json-btn').addEventListener('click', exportJSON);
+  document.getElementById('export-csv-btn').addEventListener('click', exportCSV);
+  document.getElementById('import-json-btn').addEventListener('click', () => {
+    document.getElementById('import-json-file').click();
+  });
+  document.getElementById('import-json-file').addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    await importJSONFile(file);
+    event.target.value = '';
+  });
+  document.getElementById('clear-data-btn').addEventListener('click', () => {
+    if (confirm('确认清空当前浏览器中的全部 Cognitive Lab 训练记录？此操作不可撤销。')) {
+      localStorage.removeItem(STORAGE_KEY);
+      renderHistory();
+    }
+  });
+  document.getElementById('abort-btn').addEventListener('click', () => {
+    if (!activeJsPsych) return;
+    abortRequested = true;
+    activeJsPsych.abortExperiment();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (activeJsPsych && activeSessionContext && document.hidden) {
+      activeSessionContext.interruptions += 1;
+    }
+  });
+
+  const params = new URLSearchParams(location.search);
+  const qMode = params.get('mode');
+  if (['standard', 'reduced', 'zero'].includes(qMode)) modeSelect.value = qMode;
+  updateModeUI();
+
+  const qTask = params.get('task');
+  if (qTask && TASK_LABELS[qTask] && modeFromSelect() !== 'zero') {
+    setTimeout(() => runTask(qTask), 100);
+  }
+
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+})();
+
+  </script>
+</body>
+</html>
