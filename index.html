@@ -161,7 +161,7 @@ button.danger { background: #fff; color: #b42318; border: 1px solid #f2b8b5; mar
         <input id="import-json-file" type="file" accept="application/json,.json" class="hidden" />
       </div>
 
-      <p class="footnote">数据默认只保存在当前浏览器的 localStorage。更换设备/清除浏览器数据会导致本地记录丢失。反应时受设备和浏览器影响，只适合同设备、相近条件下看粗趋势。<br><span id="app-version">v0.6.2</span></p>
+      <p class="footnote">数据默认只保存在当前浏览器的 localStorage。更换设备/清除浏览器数据会导致本地记录丢失。反应时受设备和浏览器影响，只适合同设备、相近条件下看粗趋势。<br><span id="app-version">v0.7.0</span></p>
     </section>
 
     <section id="history" class="panel hidden">
@@ -194,6 +194,7 @@ button.danger { background: #fff; color: #b42318; border: 1px solid #f2b8b5; mar
       <pre id="os-summary" class="summary hidden"></pre>
       <div id="summary-actions" class="actions-row hidden">
         <button id="copy-summary-btn" class="secondary">复制摘要</button>
+        <button id="copy-analysis-btn" class="secondary hidden">复制给 ChatGPT 分析</button>
         <button id="home-btn">返回首页</button>
       </div>
     </section>
@@ -203,7 +204,7 @@ button.danger { background: #fff; color: #b42318; border: 1px solid #f2b8b5; mar
 (() => {
   'use strict';
 
-  const APP_VERSION = '0.6.2';
+  const APP_VERSION = '0.7.0';
   const STORAGE_KEY = 'personalOS.cognitiveLab.sessions.v1';
   const TASK_LABELS = {
     reading: 'Reading Recall',
@@ -212,7 +213,7 @@ button.danger { background: #fff; color: #b42318; border: 1px solid #f2b8b5; mar
     digit: 'Digit Span',
     nback: 'Low-dose N-back'
   };
-  const TASK_VERSIONS = { reading: '1.1', stroop: '1.2', visual: '1.2', digit: '1.2', nback: '1.2' };
+  const TASK_VERSIONS = { reading: '1.3', stroop: '1.2', visual: '1.2', digit: '1.2', nback: '1.2' };
   const TASK_ABILITIES = {
     reading: ['G 表达/组织', 'C 记忆提取', 'E 轻度推理'],
     stroop: ['D 处理速度', '抑制控制'],
@@ -413,15 +414,38 @@ button.danger { background: #fff; color: #b42318; border: 1px solid #f2b8b5; mar
   }
 
   function buildReadingTimeline() {
+    const sourceChoices = ['红板报', '简讯', '人民网+', '澎湃新闻', '其他'];
+    let sourceChoice = '';
+
     return [
       {
+        type: jsPsychHtmlButtonResponse,
+        stimulus:
+          '<h2>Reading Recall｜文章来源</h2><p>选择你今天阅读文章的来源。文章全文仍不保存。</p>',
+        choices: sourceChoices,
+        data: { kind: 'reading_source' },
+        on_finish(data) {
+          sourceChoice = sourceChoices[data.response] || '';
+          data.source = sourceChoice;
+        }
+      },
+      {
         type: jsPsychSurveyText,
-        preamble: '<h2>Reading Recall</h2><p>先在红板报 / 简讯等来源完成一篇阅读。不要把全文粘贴进这里。</p>',
+        preamble:
+          '<h2>文章信息</h2><p>先完成阅读，再填写标题。若方便，附文章链接能让我后续更准确地核对原文并分析你的摘要、观点和反问。</p>',
         questions: [
-          { prompt: '来源（可选）', name: 'source' },
-          { prompt: '标题（可选）', name: 'title' }
+          { prompt: '标题（建议填写）', name: 'title' },
+          { prompt: '文章链接（可选但推荐）', name: 'url' },
+          { prompt: '其他来源名称（仅选择“其他”时填写）', name: 'other_source' }
         ],
-        button_label: '我已经读完'
+        button_label: '我已经读完',
+        data: { kind: 'reading_meta' },
+        on_finish(data) {
+          const other = (data.response?.other_source || '').trim();
+          data.source = sourceChoice === '其他' && other ? other : sourceChoice;
+          data.title = (data.response?.title || '').trim();
+          data.url = (data.response?.url || '').trim();
+        }
       },
       {
         type: jsPsychSurveyText,
@@ -431,7 +455,8 @@ button.danger { background: #fff; color: #b42318; border: 1px solid #f2b8b5; mar
           { prompt: '一句自己的观点 / 判断', name: 'view', rows: 2, required: true },
           { prompt: '一个反问、替代解释或推理点', name: 'question', rows: 2, required: true }
         ],
-        button_label: '完成'
+        button_label: '完成',
+        data: { kind: 'reading_recall' }
       }
     ];
   }
@@ -687,14 +712,15 @@ button.danger { background: #fff; color: #b42318; border: 1px solid #f2b8b5; mar
 
   function summarizeTask(task, rows) {
     if (task === 'reading') {
-      const texts = rows.filter((r) => r.response && (r.response.summary !== undefined || r.response.source !== undefined));
-      const meta = texts.find((r) => r.response && (r.response.source !== undefined || r.response.title !== undefined));
-      const recall = texts.find((r) => r.response && r.response.summary !== undefined);
+      const meta = rows.find((r) => r.kind === 'reading_meta');
+      const sourceRow = rows.find((r) => r.kind === 'reading_source');
+      const recall = rows.find((r) => r.kind === 'reading_recall');
       return {
         metrics: { completed: true },
         reading: {
-          source: meta?.response?.source || '',
-          title: meta?.response?.title || '',
+          source: meta?.source || sourceRow?.source || '',
+          title: meta?.title || meta?.response?.title || '',
+          url: meta?.url || meta?.response?.url || '',
           summary: recall?.response?.summary || '',
           view: recall?.response?.view || '',
           question: recall?.response?.question || ''
@@ -822,6 +848,7 @@ button.danger { background: #fff; color: #b42318; border: 1px solid #f2b8b5; mar
 
     if (s.reading) {
       lines.push(`- 真实功能训练：${s.reading.source || '文章'}${s.reading.title ? `｜${s.reading.title}` : ''}`);
+      if (s.reading.url) lines.push(`- 文章链接：${s.reading.url}`);
       lines.push(`- 时长：${s.duration_min} 分钟`);
       lines.push(`- 脑疲劳：训练前 ${s.fatigue_before ?? '—'}/10 → 训练后 ${s.fatigue_after ?? '—'}/10`);
       lines.push(`- 一句发现：${s.finding || '未填写'}`);
@@ -841,6 +868,33 @@ button.danger { background: #fff; color: #b42318; border: 1px solid #f2b8b5; mar
     return lines.join('\n');
   }
 
+  function makeReadingAnalysisPrompt(s) {
+    if (!s?.reading) return '';
+    const r = s.reading;
+    return [
+      '请分析我这次 Personal OS Reading Recall 训练。不要只做鼓励，要指出具体问题和可改进之处。',
+      '',
+      '如果提供了文章链接，请先核对原文；如果没有链接但有“来源 + 标题”，请先搜索并确认对应文章。若无法获得原文，请明确说明你只能分析我的输出，不能假装看过文章。',
+      '',
+      `文章来源：${r.source || '未填写'}`,
+      `文章标题：${r.title || '未填写'}`,
+      `文章链接：${r.url || '未填写'}`,
+      '',
+      `我的脱稿摘要：${r.summary}`,
+      `我的观点 / 判断：${r.view}`,
+      `我的反问 / 替代解释 / 推理点：${r.question}`,
+      '',
+      '请按以下顺序分析：',
+      '1. 摘要：与原文相比是否准确、遗漏了什么、是否抓住主线、能否更紧凑地组织。',
+      '2. 观点：给出我的推理链，指出证据是否足够、隐藏前提是什么、有哪些替代解释或反例。',
+      '3. 反问：它是否击中文章的关键假设或证据缺口；如果太弱，给出一个更好的反问。',
+      '4. 你的独立看法：明确区分“文章事实 / 作者解释 / 你的推断 / 价值判断”，给出你对文章核心问题的看法，不迎合我的观点。',
+      '5. 最后给我一个最值得继续想的问题，控制在 1 个。',
+      '',
+      '目标是训练表达组织、逻辑推理和记忆提取；不要做医学诊断，也不要把这次表现解释成认知恢复程度。'
+    ].join('\n');
+  }
+
   function savePending() {
     if (!pendingSession) return;
     pendingSession.finding = document.getElementById('finding').value.trim();
@@ -856,6 +910,7 @@ button.danger { background: #fff; color: #b42318; border: 1px solid #f2b8b5; mar
     pre.textContent = summary;
     pre.classList.remove('hidden');
     document.getElementById('summary-actions').classList.remove('hidden');
+    document.getElementById('copy-analysis-btn').classList.toggle('hidden', !pendingSession.reading);
     document.getElementById('save-result-btn').classList.add('hidden');
     document.getElementById('skip-save-btn').classList.add('hidden');
   }
@@ -1019,6 +1074,16 @@ button.danger { background: #fff; color: #b42318; border: 1px solid #f2b8b5; mar
       await navigator.clipboard.writeText(txt);
     } catch {
       window.prompt('复制下面内容：', txt);
+    }
+  });
+  document.getElementById('copy-analysis-btn').addEventListener('click', async () => {
+    const txt = makeReadingAnalysisPrompt(pendingSession);
+    if (!txt) return;
+    try {
+      await navigator.clipboard.writeText(txt);
+      alert('已复制“ChatGPT 分析包”。回到当前 ChatGPT 对话直接粘贴即可。');
+    } catch {
+      window.prompt('复制下面内容到 ChatGPT：', txt);
     }
   });
   document.getElementById('history-btn').addEventListener('click', () => {
